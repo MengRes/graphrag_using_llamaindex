@@ -1,0 +1,65 @@
+# GraphRAG Technology Reference: Architecture and Implementation Guide
+
+## Chapter 1: Introduction to Graph-Based Retrieval
+
+GraphRAG (Graph Retrieval-Augmented Generation) extends traditional vector-based RAG by constructing a knowledge graph from source documents and leveraging graph structure for both local and global retrieval. Traditional RAG systems embed text chunks into vector space and retrieve the nearest neighbors at query time. While effective for factoid questions, this approach struggles with queries requiring holistic understanding across an entire corpus, such as "What are the main themes in this dataset?" or "How do these concepts relate across documents?"
+
+Microsoft Research published the foundational GraphRAG paper in 2024, demonstrating that community-level summarization over knowledge graphs significantly outperforms flat chunk retrieval on global sensemaking tasks. LlamaIndex subsequently integrated GraphRAG patterns through PropertyGraphIndex, GraphRAGExtractor, and community detection via the graspologic library.
+
+The GraphRAG pipeline consists of two major phases: graph generation and query answering. Graph generation transforms raw documents into a structured knowledge graph with community annotations. Query answering uses community summaries to produce comprehensive responses to user questions.
+
+## Chapter 2: Document Chunking Strategies
+
+The first step in any GraphRAG pipeline is splitting source documents into manageable text chunks. Chunking quality directly affects entity extraction accuracy and graph connectivity.
+
+**SentenceSplitter** is the default chunking strategy in LlamaIndex GraphRAG implementations. It divides text at sentence boundaries while respecting a maximum chunk size measured in tokens. Typical configurations use a chunk size of 1024 tokens with an overlap of 20 tokens. Overlap ensures that entities appearing at chunk boundaries are captured in at least one complete context window.
+
+Alternative chunking strategies include **SemanticSplitter**, which uses embedding similarity to detect topic shifts before splitting, and **TokenTextSplitter**, which splits at fixed token counts without regard to sentence boundaries. For structured documents with clear section headers, **MarkdownNodeParser** or **HTMLNodeParser** can preserve hierarchical metadata that improves downstream extraction.
+
+Research by NovaMind Labs (ICLR 2025 workshop paper) found that semantic chunking improved entity extraction F1 scores by 8.3% on scientific paper corpora compared to fixed-size splitting. However, fixed-size splitting with overlap remains the recommended baseline due to its simplicity and predictable behavior.
+
+Each chunk becomes a TextNode with metadata including source file path, chunk index, and character offsets. These metadata fields propagate through the pipeline and appear in extraction logs for traceability.
+
+## Chapter 3: Entity and Relationship Extraction
+
+Entity and relationship extraction is the most LLM-intensive step in the GraphRAG pipeline. For each text chunk, an LLM prompt instructs the model to identify entities (with name, type, and description) and relationships (with source entity, target entity, relation label, and description).
+
+The **GraphRAGExtractor** class in LlamaIndex implements this extraction using an async worker pool. Key parameters include `max_paths_per_chunk` (limiting triples per chunk to control cost), `num_workers` (parallel LLM calls), and a custom `parse_fn` for structured output parsing. JSON-formatted extraction prompts generally produce more reliable parsing than delimiter-based formats.
+
+Extracted entities become **EntityNode** objects with properties including `entity_description`. Extracted relationships become **Relation** objects with `relationship_description` in their properties. Both are stored in chunk metadata under `KG_NODES_KEY` and `KG_RELATIONS_KEY` before being merged into the property graph store.
+
+Common extraction challenges include entity duplication (e.g., "IBM" vs "International Business Machines"), relationship ambiguity (e.g., "works at" vs "employed by"), and hallucinated relationships not supported by source text. Post-extraction entity resolution techniques such as embedding-based clustering and rule-based alias matching can reduce graph noise.
+
+Logging at this stage should capture per-chunk entity counts, relation counts, extraction errors, and the full list of extracted triples for audit and debugging purposes.
+
+## Chapter 4: Property Graph Indexing
+
+After extraction, chunks and their associated graph elements are loaded into a **PropertyGraphIndex**. This index combines vector embeddings of text chunks with a property graph store containing entities and relationships.
+
+LlamaIndex supports multiple graph store backends. **SimplePropertyGraphStore** keeps the graph in memory, suitable for prototyping and small corpora. **Neo4jPropertyGraphStore** provides persistent, queryable graph storage for production deployments. Other supported backends include FalkorDB, Kuzu, and Memgraph.
+
+During index construction, the PropertyGraphIndex embeds each text chunk using a configured embedding model (typically OpenAI text-embedding-3-small or text-embedding-3-large). These embeddings enable hybrid retrieval that combines vector similarity with graph traversal at query time.
+
+The resulting graph can be queried for triplets using `get_triplets()`, which returns tuples of (source_entity, relation, target_entity). Graph statistics including node count, edge count, and degree distribution provide useful sanity checks after indexing.
+
+## Chapter 5: Community Detection and Summarization
+
+Community detection organizes the knowledge graph into densely connected clusters, enabling global reasoning over thematic groups rather than individual entities.
+
+GraphRAG uses the **hierarchical Leiden algorithm** from the graspologic library. Leiden improves upon the Louvain algorithm by guaranteeing well-connected communities and avoiding badly connected nodes. The hierarchical variant recursively subdivides communities exceeding `max_cluster_size`, producing a multi-level community tree.
+
+The algorithm operates on a NetworkX graph converted from the property graph store. Each node represents an entity, and each edge carries relationship label and description attributes. The Leiden output assigns each entity to one or more community IDs at different hierarchy levels.
+
+After community detection, an LLM generates a natural-language **community summary** for each cluster. The summary input consists of all relationship descriptions within the community, formatted as "entity1 -> entity2 -> relation -> description" strings. Community summaries capture the thematic essence of each cluster and serve as the primary retrieval unit for global queries.
+
+The `max_cluster_size` parameter (typically 5-15) controls community granularity. Smaller values produce more numerous, specific communities. Larger values create fewer, broader communities suitable for high-level thematic queries.
+
+## Chapter 6: Query Processing and Answer Generation
+
+GraphRAG query processing differs from standard RAG by routing queries through community summaries rather than raw text chunks.
+
+The **GraphRAGQueryEngine** implements the following flow: (1) retrieve relevant entities from the query using vector similarity over indexed chunks, (2) map entities to their community memberships, (3) select community summaries associated with those entities, (4) generate per-community answers using the LLM, and (5) aggregate community answers into a final response.
+
+For global queries where no specific entities match, the engine falls back to querying all community summaries. This map-reduce pattern mirrors Microsoft's original GraphRAG design and enables comprehensive answers to broad questions.
+
+Query logging should record matched entities, selected community IDs, intermediate community answers, and the final aggregated response for evaluation and improvement.

@@ -1,0 +1,77 @@
+# SentinelShield Incident Response Report: Operation DarkStream
+
+## Chapter 1: Incident Discovery and Initial Triage
+
+On October 17, 2024, at 03:42 UTC, SentinelShield Security's managed detection and response (MDR) platform flagged an anomalous outbound data transfer from the network of Meridian Financial Group, a mid-size investment bank headquartered in Chicago. The alert was triggered by SentinelShield's machine learning anomaly detector, which identified a 340-gigabyte encrypted upload to an IP address geolocated to a bulletproof hosting provider in Moldova.
+
+SentinelShield's incident commander, Sarah Mitchell, activated the company's Tier 3 response protocol within twelve minutes of the initial alert. Mitchell, a former FBI Cyber Division analyst with fourteen years of experience, assembled a response team including forensic analyst Kevin Zhang, threat intelligence lead Amara Okafor, and communications director James Holloway.
+
+Meridian Financial Group's Chief Information Security Officer, Robert Langford, was notified at 04:15 UTC. Langford confirmed that the affected system was a legacy document management server (DMS-PROD-07) running an outdated version of SharePoint 2016. The server contained approximately 1.8 terabytes of client portfolio data, merger and acquisition documents, and internal compliance records.
+
+Initial triage by Kevin Zhang revealed that the attackers had maintained persistent access for an estimated thirty-seven days before exfiltration began. Indicators of compromise included a web shell named "config.aspx" planted in the SharePoint content directory, a scheduled task executing every six hours, and credential harvesting via a modified version of the Mimikatz tool.
+
+## Chapter 2: Threat Actor Attribution and Attack Timeline
+
+SentinelShield's threat intelligence team, led by Amara Okafor, conducted attribution analysis using internal threat databases, MITRE ATT&CK framework mapping, and intelligence shared through the Financial Services Information Sharing and Analysis Center (FS-ISAC).
+
+The attack was attributed with moderate confidence (75%) to a threat group tracked as FINANCEPHANTOM by SentinelShield and as APT-Currency by CrowdStrike. FINANCEPHANTOM is a financially motivated group active since 2021, targeting financial services companies in North America and Western Europe. Previous campaigns attributed to the group include the 2023 breach of Pacific Coast Credit Union and the 2024 ransomware attack on Hartwell Insurance Group.
+
+The reconstructed attack timeline spans five phases:
+
+**Phase 1 - Initial Access (September 10, 2024):** The attackers exploited CVE-2024-38094, a critical remote code execution vulnerability in Microsoft SharePoint Server, to gain initial foothold. The vulnerability had been patched by Microsoft on August 13, 2024, but Meridian had not applied the patch to DMS-PROD-07 due to a pending compatibility test with an internal compliance plugin.
+
+**Phase 2 - Persistence and Privilege Escalation (September 10-14, 2024):** The web shell was deployed, and the attackers escalated privileges using stolen service account credentials (svc-backup, password rotated quarterly but compromised via Kerberoasting). They created a new local administrator account named "sys_update_svc" to maintain redundant access.
+
+**Phase 3 - Lateral Movement (September 15 - October 10, 2024):** Using Remote Desktop Protocol (RDP) and PsExec, the attackers moved laterally to three additional servers: the email gateway (EXCH-PROD-02), the compliance database server (SQL-COMP-01), and a development environment (DEV-SHARE-03). GraphRAG-based analysis of network flow logs, performed by SentinelShield using NovaMind Labs' GraphRAG Engine, revealed the lateral movement path by extracting entity-relationship patterns from 2.3 million log entries.
+
+**Phase 4 - Collection and Staging (October 11-16, 2024):** The attackers compressed and encrypted selected documents using 7-Zip with AES-256 encryption, staging them in a hidden directory on DMS-PROD-07 before exfiltration.
+
+**Phase 5 - Exfiltration (October 17, 2024):** Data was exfiltrated via HTTPS to the Moldova IP address using a custom tool that fragmented transfers into 50-megabyte chunks to evade data loss prevention (DLP) thresholds.
+
+## Chapter 3: Containment, Eradication, and Recovery
+
+SentinelShield executed containment measures in coordination with Meridian's IT team and external counsel from the law firm Kirkland & Ellis.
+
+**Containment (October 17-18, 2024):** All five compromised servers were isolated from the network within four hours. Firewall rules were updated to block outbound connections to the Moldova IP and seventeen additional command-and-control addresses identified through threat intelligence. Active sessions on the "sys_update_svc" account were terminated, and all service account passwords were rotated across the entire Meridian infrastructure.
+
+**Eradication (October 19-22, 2024):** Forensic imaging of all compromised systems was completed by Kevin Zhang's team. The web shell, scheduled tasks, and unauthorized accounts were removed. DMS-PROD-07 was rebuilt from a known-good backup dated September 8, 2024 (two days before initial compromise). The remaining four servers underwent full operating system reinstallation.
+
+**Recovery (October 23 - November 15, 2024):** Services were restored in priority order: compliance database (October 25), email gateway (October 28), document management (November 5), and development environment (November 15). Each restored system was monitored for seventy-two hours before being returned to production status. SentinelShield deployed its endpoint detection and response (EDR) agent on all five recovered servers with enhanced logging policies.
+
+Meridian Financial Group reported the incident to the Securities and Exchange Commission (SEC) on October 20, 2024, as required under the SEC cybersecurity disclosure rules effective December 2023. The FBI Cyber Division's Chicago field office opened a parallel investigation, assigning the case to Special Agent Diana Reyes.
+
+## Chapter 4: GraphRAG-Assisted Forensic Analysis
+
+A notable innovation in this incident response was SentinelShield's use of GraphRAG technology to accelerate forensic analysis of large-scale log data and threat intelligence reports.
+
+Kevin Zhang's forensic team exported 2.3 million network flow records, 890,000 authentication logs, and 156 threat intelligence reports related to FINANCEPHANTOM into a unified corpus. NovaMind Labs' GraphRAG Engine processed this corpus through its standard pipeline: document chunking, entity-relationship extraction, property graph indexing, and community detection.
+
+The resulting knowledge graph contained 14,700 entities (IP addresses, hostnames, user accounts, file paths, malware families) and 31,200 relationships (connected_to, authenticated_as, executed_on, exfiltrated_to). Community detection using hierarchical Leiden identified twelve distinct activity clusters.
+
+The most critical community (Cluster 7) contained entities related to the lateral movement path: DMS-PROD-07, EXCH-PROD-02, SQL-COMP-01, svc-backup, and the PsExec tool. The community summary generated by GraphRAG matched Kevin Zhang's manual timeline reconstruction with 94% accuracy, reducing analysis time from an estimated three weeks to four days.
+
+Amara Okafor's threat intelligence team used GraphRAG community summaries to cross-reference FINANCEPHANTOM's known tactics with Meridian-specific indicators. A community spanning APT-Currency, CVE-2024-38094, and Kerberoasting revealed that the group had used the same SharePoint vulnerability against two other financial institutions in Q3 2024, information that was distributed to FS-ISAC members within twenty-four hours.
+
+SentinelShield published a technical blog post describing the GraphRAG forensic methodology in November 2024, generating significant interest from the cybersecurity community. The company subsequently added GraphRAG-based log analysis as a standard offering in its MDR service tier.
+
+## Chapter 5: Lessons Learned and Recommendations
+
+SentinelShield and Meridian Financial Group jointly published a lessons-learned report in January 2025, identifying systemic failures and recommending remediation measures.
+
+**Root Cause Analysis:** The primary root cause was the unpatched SharePoint vulnerability on DMS-PROD-07. Contributing factors included insufficient network segmentation (flat network architecture allowing unrestricted lateral movement), weak service account credential management (Kerberoastable SPNs on svc-backup), and DLP rules with thresholds too high to detect chunked exfiltration.
+
+**Recommendations for Meridian Financial Group:**
+1. Implement a zero-trust network architecture with micro-segmentation between server tiers by Q2 2025.
+2. Deploy privileged access management (PAM) for all service accounts, eliminating standing administrative privileges.
+3. Reduce patch application window from thirty days to seven days for critical vulnerabilities.
+4. Lower DLP exfiltration thresholds and implement behavioral analytics for outbound data transfers.
+5. Engage SentinelShield for continuous GraphRAG-based threat hunting across all log sources.
+
+**Recommendations for the Financial Services Industry:**
+1. FS-ISAC should establish a shared GraphRAG knowledge graph of threat actor tactics, updated weekly from member incident reports.
+2. Regulatory bodies should mandate patch compliance reporting for known exploited vulnerabilities within fourteen days of CISA advisory publication.
+3. Financial institutions should conduct annual red team exercises simulating FINANCEPHANTOM's attack chain.
+
+Meridian Financial Group estimated total incident costs at $4.7 million, including forensic services, legal fees, regulatory fines ($1.2 million SEC penalty), customer notification costs, and credit monitoring for 12,000 affected clients. SentinelShield's response was credited with preventing an additional estimated $8-12 million in damages by detecting exfiltration before the full 1.8-terabyte dataset could be transferred.
+
+Robert Langford resigned as CISO in December 2024. His replacement, Angela Whitfield, previously CISO at Northern Trust Corporation, began restructuring Meridian's security program in January 2025 with a reported budget increase of 60%.

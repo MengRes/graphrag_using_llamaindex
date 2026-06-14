@@ -1,0 +1,43 @@
+# NovaMind Labs: Corporate Profile and Strategic Overview
+
+## Chapter 1: Founding and Early History
+
+NovaMind Labs was founded in March 2019 in San Francisco by Dr. Elena Vasquez and Dr. James Whitmore, two former researchers from Stanford University's Natural Language Processing Group. The company began as a small startup focused on semantic search for enterprise document archives. Within its first year, NovaMind secured a seed round of $4.2 million led by Accel Partners, with participation from Y Combinator and several angel investors including former Google VP Susan Chen.
+
+Dr. Vasquez serves as Chief Executive Officer and has published over forty papers on knowledge representation and retrieval-augmented generation. Dr. Whitmore, the Chief Technology Officer, previously led the embedding team at OpenAI before co-founding NovaMind. The company's original mission statement emphasized "making structured knowledge accessible from unstructured text at scale."
+
+By 2021, NovaMind had grown to eighty employees and relocated its headquarters to a larger office in Palo Alto. The company opened a secondary research office in London in 2022, headed by Dr. Priya Sharma, who joined from DeepMind's language team. NovaMind's early clients included Reuters, the World Health Organization, and three Fortune 500 financial institutions.
+
+## Chapter 2: Product Portfolio
+
+NovaMind Labs operates three flagship products, each targeting a distinct market segment.
+
+**GraphRAG Engine** is the company's core technology platform. Released in beta in January 2024 and generally available by June 2024, GraphRAG Engine performs entity-relation extraction, property graph indexing, hierarchical community detection, and global query answering. The product is built on LlamaIndex abstractions and uses the hierarchical Leiden algorithm via the graspologic library. Lead engineer Marcus O'Brien manages a team of eighteen developers responsible for GraphRAG Engine.
+
+**DocMind Enterprise** is a document intelligence platform launched in September 2023. DocMind parses PDF, Word, HTML, and scanned documents, then routes parsed content through GraphRAG Engine for knowledge retrieval. Major deployments include a 500,000-document legal archive for Baker & McKenzie and a clinical trials repository for Pfizer. Product manager Rachel Kim reports that DocMind processes over two million pages per month across all customers.
+
+**CodeAtlas** is an AI-powered codebase understanding tool announced at GitHub Universe 2024. CodeAtlas indexes source repositories as knowledge graphs, enabling developers to ask natural-language questions about architecture, dependencies, and ownership. The product integrates GraphRAG Engine for cross-file relationship discovery. Early adopters include Stripe, Shopify, and the Linux Foundation.
+
+## Chapter 3: Leadership and Organizational Structure
+
+NovaMind Labs employs 240 people across four offices: Palo Alto (headquarters), London, Singapore, and Berlin. The executive team consists of seven members.
+
+Dr. Elena Vasquez (CEO) oversees corporate strategy, investor relations, and partnerships. Dr. James Whitmore (CTO) leads all engineering and research divisions. Dr. Priya Sharma (VP of Research, London) directs the company's machine learning research lab, which publishes regularly at NeurIPS, ACL, and ICML. Marcus O'Brien (VP of Engineering) manages product engineering for GraphRAG Engine and CodeAtlas. Rachel Kim (VP of Product) owns the DocMind product line and customer success. David Park (CFO) joined from Snowflake in 2023 and manages finance and operations. Angela Torres (Chief Legal Officer) handles compliance, intellectual property, and the company's SOC 2 certification program.
+
+The board of directors includes Accel Partners partner Michael Reeves, Dr. Susan Chen, and independent director Margaret Holloway, former CEO of Palantir Technologies. NovaMind maintains an technical advisory board with professors from MIT, Stanford, and the University of Edinburgh.
+
+## Chapter 4: Funding, Partnerships, and Market Expansion
+
+NovaMind Labs has raised $127 million across four funding rounds. The Series A ($12M, 2020) and Series B ($35M, 2022) were led by Accel Partners. The Series C ($80M, 2024) was co-led by Sequoia Capital and Index Ventures, with a post-money valuation of $620 million. Sequoia partner Linda Wu joined the board following the Series C.
+
+Strategic partnerships form a critical part of NovaMind's go-to-market strategy. In 2023, NovaMind signed a multi-year agreement with Amazon Web Services to deploy GraphRAG Engine on AWS SageMaker and Amazon Bedrock. A parallel partnership with Microsoft Azure was announced in 2024, making GraphRAG Engine available through Azure Marketplace. NovaMind also collaborates with Neo4j Inc. on graph database integration and with Hugging Face on open-source model hosting.
+
+International expansion accelerated in 2024. The Singapore office, opened in March 2024 under country manager Wei Lin, targets Southeast Asian financial services and government clients. The Berlin office, established in August 2024, focuses on European manufacturing and automotive companies, with BMW and Siemens among early prospects. NovaMind plans to open a Tokyo office in 2026.
+
+## Chapter 5: Research Publications and Industry Recognition
+
+NovaMind Labs maintains an active research program with twelve papers published in top-tier venues between 2022 and 2025. The most cited work is "Hierarchical Community Detection for Scalable GraphRAG" (NeurIPS 2024), authored by Dr. Priya Sharma, Marcus O'Brien, and Dr. James Whitmore. The paper introduces an improved variant of the Leiden algorithm optimized for knowledge graphs extracted from large document corpora.
+
+Other notable publications include "Entity Resolution in Noisy LLM-Extracted Graphs" (ACL 2024) by Dr. Elena Vasquez and colleagues, and "Global Query Answering via Community Summary Aggregation" (EMNLP 2024) by the London research team. NovaMind open-sourced its community detection module on GitHub in November 2024, receiving over 3,000 stars within three months.
+
+Industry recognition includes the 2024 Gartner Cool Vendor award in AI Knowledge Management, placement on Forbes AI 50 list, and the InfoWorld Technology of the Year award for GraphRAG Engine. Dr. Vasquez was named to Time Magazine's 100 Most Influential People in AI in 2025.
