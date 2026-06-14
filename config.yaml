@@ -1,0 +1,41 @@
+# GraphRAG configuration
+
+llm:
+  model: gpt-4o
+  temperature: 0.0
+
+embedding:
+  model: text-embedding-3-large
+
+chunking:
+  chunk_size: 512
+  chunk_overlap: 20
+
+extraction:
+  max_paths_per_chunk: 10
+  num_workers: 4
+
+community:
+  max_cluster_size: 5
+  summary_levels: [0, 1, 2]   # LLM summary levels to generate (use [0] for faster builds)
+
+query:
+  default_mode: auto          # local | global | auto
+  community_level: 0          # hierarchy level for global search (0 = most detailed)
+  entity_top_k: 10
+  text_chunk_top_k: 5
+  map_batch_size: 5
+  min_importance_score: 1
+  entity_similarity_threshold: 0.3
+  map_max_length: 1000
+  reduce_max_length: 2000
+  response_type: "Multiple Paragraphs"
+
+deduplication:
+  enabled: true
+  similarity_threshold: 0.88
+
+paths:
+  data_dir: data
+  output_dir: output
+  logs_dir: logs

@@ -1,0 +1,7 @@
+.env
+openai_key.txt
+output/
+logs/
+__pycache__/
+*.pyc
+.DS_Store
